@@ -4,6 +4,9 @@ app = Flask(__name__)
 
 @app.route("/", methods=['GET'])
 def home():
+	sort_by = request.args.get("sort_by")
+	if sort_by:
+		return custom_sort(sort_by) + upload_form()
 	return  default_sort() + upload_form()
 
 @app.route("/new_csv", methods=['POST'])
@@ -28,11 +31,18 @@ def parse_csv(file):
 
 
 
+entry_template = "<tr> <th>{}</th> <th>{}</th> <th>{}</th> <th>{}</th> </tr>"
+
+def headers(names):
+	link_template =  "<strong><a href='/?sort_by={n}'>{n}</a></strong>"
+	links = [link_template.format(n=name) for name in names]
+	return entry_template.format(*links)
+
 def table(data):
-	entry_template = "<tr> <th>{a}</th> <th>{b}</th> <th>{c}</th> <th>{d}</th> </tr>"
 	res = "<table style='width:100%'>"
-	for entry in data:
-		res += entry_template.format(a=entry[0],b=entry[1],c=entry[2],d=entry[3])
+	res += headers(data[0])
+	for entry in data[1:]:
+		res += entry_template.format(entry[0],entry[1],entry[2],entry[3])
 	res += "</table>"
 	return res
 
@@ -44,9 +54,21 @@ def upload_form():
 	res += "</form>"
 	return res
 
-#todo: potentially use sorted() rather than .sort() to not mutate global data	
 def default_sort():
 	data = [app.data[0]] + sorted(app.data[1:], key=lambda line: line[2])
+	return table(data)
+
+def custom_sort(sort_by):
+	category_index = None  
+	for (i,header_name) in enumerate(app.data[0]):
+		if header_name == sort_by:
+			category_index = i	
+
+	if category_index==None:
+		print("ERROR ON SORT")
+		cateegory_index = 0
+
+	data = [app.data[0]] + sorted(app.data[1:], key=lambda line: line[category_index])
 	return table(data)
 
 if __name__=="__main__":
