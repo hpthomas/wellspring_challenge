@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route("/", methods=['GET'])
 def home():
-	return  default_sort(app.data) + upload_form()
+	return  default_sort() + upload_form()
 
 @app.route("/new_csv", methods=['POST'])
 def new_csv():
@@ -20,15 +20,11 @@ def new_csv():
 		return redirect(url_for('home'))
 
 def parse_csv(file):
-	print("file")
-	print(file)
-	print(len(file))
 	# split file into lines
 	lines = [str(line).split(",") for line in file if line]
 	for line in lines:
-		print(line)
 		line[3] = line[3].rstrip() #str.rstrip() remove trailing whitepsace
-	return lines[1:] # do not include header row
+	return lines # do not include header row
 
 
 
@@ -49,8 +45,8 @@ def upload_form():
 	return res
 
 #todo: potentially use sorted() rather than .sort() to not mutate global data	
-def default_sort(data):
-	data.sort(key=lambda line: line[2])
+def default_sort():
+	data = [app.data[0]] + sorted(app.data[1:], key=lambda line: line[2])
 	return table(data)
 
 if __name__=="__main__":
