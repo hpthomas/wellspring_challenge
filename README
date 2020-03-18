@@ -1,0 +1,11 @@
+If a 'trains.csv' file is present in tthe directory where the app is started, it will be displayed initially. If not, the app will initially only give the user to uplaod their own csv file. 
+
+This app is a web server written in Python using the Flask framework. 
+-Only setup is pip install flask
+
+-All data is stored in the server's memory, not suitable for production
+-SQLite etc would fix 
+-Editing is accomplished using (row,col) as identifier. 
+-Repeats are ignored in .csv parse
+-If a user edit creates a repeated line in the table not caught
+-Entirely empty entries are allowed

@@ -4,6 +4,8 @@ app = Flask(__name__)
 
 @app.route("/", methods=['GET'])
 def home():
+	if not app.data: 
+		return options()
 	sort_by = request.args.get("sort_by")
 	if sort_by:
 		return options() + custom_sort(std_table, sort_by)
@@ -11,6 +13,8 @@ def home():
 
 @app.route("/edit", methods=['GET', 'POST'])
 def edit():
+	if not app.data: 
+		return redirect(url_for('home'))
 	if request.method=='GET':
 		try:
 			row,col = int(request.args['row']), int(request.args['col'])
@@ -38,10 +42,17 @@ def new_csv():
 		return redirect(url_for('home'))
 
 def parse_csv(file):
-	# split file into lines
-	lines = [str(line).split(",") for line in file if line]
-	for line in lines:
-		line[3] = line[3].rstrip() #str.rstrip() remove trailing whitepsace
+	repeats = set()
+	lines = []
+	for raw_line in file:
+		if not raw_line: 
+			continue
+		line = str(raw_line).split(",")	
+		line = [item.strip() for item in line] 
+		tup = tuple(line)
+		if tup not in repeats:
+			repeats.add(tup)
+			lines.append(line)
 	return lines # do not include header row
 
 
@@ -117,7 +128,6 @@ def custom_sort(table, sort_by):
 			category_index = i	
 
 	if category_index==None:
-		print("ERROR ON SORT")
 		category_index = 0
 
 	data = [app.data[0]] + sorted(app.data[1:], key=lambda line: line[category_index])
@@ -125,7 +135,11 @@ def custom_sort(table, sort_by):
 	return table(data)
 
 if __name__=="__main__":
-	with open("trains.csv") as file:
-		data = parse_csv(file.readlines())	
-		app.data = data
-		app.run()	
+	try: 
+		with open("trains.csv") as file:
+			data = parse_csv(file.readlines())	
+			app.data = data
+			app.run()	
+	except:
+		app.data = []
+		app.run()
