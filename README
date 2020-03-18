@@ -7,7 +7,6 @@ python server.py
 
 
 Only server.py must be present in the working directory for the app to run. 
-If a 'trains.csv' file is also present, it will be parsed and displayed by default. 
 This requires Python 3.3 or newer to run correctly - specifically, the List.copy() funciton is required.
 
 
