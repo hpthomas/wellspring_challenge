@@ -1,11 +1,35 @@
-If a 'trains.csv' file is present in tthe directory where the app is started, it will be displayed initially. If not, the app will initially only give the user to uplaod their own csv file. 
+Live demo: http://hpthomas.pythonanywhere.com/
 
 This app is a web server written in Python using the Flask framework. 
--Only setup is pip install flask
+Usage:
+pip install flask
+python server.py
 
--All data is stored in the server's memory, not suitable for production
--SQLite etc would fix 
--Editing is accomplished using (row,col) as identifier. 
--Repeats are ignored in .csv parse
--If a user edit creates a repeated line in the table not caught
--Entirely empty entries are allowed
+
+Only server.py must be present in the working directory for the app to run. 
+If a 'trains.csv' file is also present, it will be parsed and displayed by default. 
+This requires Python 3.3 or newer to run correctly - specifically, the List.copy() funciton is required.
+
+
+If a 'trains.csv' file is present in the directory where the app is started, it will be displayed initially. If not, the user must upload their own CSV file. 
+
+
+NOTES
+In addition to the basic requirements, this app also allows for alphabetical sorting by a user-selected category.
+To sort by category, the user can simply click on the category name.
+
+Partial CRUD functionality was implemented as well - the user may edit any entry in the table, but creation and deletion of rows has not been implemented.
+To edit an entry, the user clicks 'edit' from the home page, and then clicks on the entry they wish to change. They are presented with a text input field which, when submitted, modifies that category on the server. 
+
+
+One a CSV file has been parsed, the data is stored in the Flask application's working memory. This means that the code is not sutable for deployment in a production environment where multiple server processes are running simultaneously, but it allows for straightforward deployment which does not depend on access to a local file system. 
+
+
+ASSUMPTIONS 
+-Values and category names are case-sensitive - two lines in the table that differ only by capitalization will still be considered unique entries
+-Leading and trailing whitespace is stripped from all values in the CSV file, so '  Brown Line ' is equivalent to 'Brown Line' (but distinct from 'Brown   Line')
+-The output is sorted by RUN_NUMBER by default. For this to work, the input must contain a category of that exact name - if it is called e.g. 'Run Number', the application defaults to sorting by column zero.
+-The input CSV files must contain the correct number of values in each line. Entirely empty lines are accepted but they must be of the form ', , , , ' 
+-When a CSV file is uploaded it is assumed to be encoded in UTF-8
+-The server verifies that all entries are unique when parsing a CSV file. This means that if the user edits an entry to be identical to another entry, it will remain in the system. 
+

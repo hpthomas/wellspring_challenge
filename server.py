@@ -2,14 +2,22 @@ from flask import Flask,request,redirect,url_for
 
 app = Flask(__name__)
 
+"""
+Routes
+The only endpoints are:
+'/' - home page - GET 
+'/edit' - edit page - GET,POST
+'/newCSV' - upload CSV - POST
+"""
+
 @app.route("/", methods=['GET'])
 def home():
 	if not app.data: 
 		return options()
 	sort_by = request.args.get("sort_by")
 	if sort_by:
-		return options() + custom_sort(std_table, sort_by)
-	return  options() + default_sort(std_table) 
+		return options() + sort(std_table, sort_by)
+	return  options() + sort(std_table, "RUN_NUMBER") 
 
 @app.route("/edit", methods=['GET', 'POST'])
 def edit():
@@ -20,7 +28,8 @@ def edit():
 			row,col = int(request.args['row']), int(request.args['col'])
 			return options() + edit_item_table(app.data,row,col)
 
-		except:
+		except Exception as e:
+			print(e)
 			return options() + edit_link_table(app.data)
 	else:
 		new_entry = request.form.get('new_entry')
@@ -41,6 +50,12 @@ def new_csv():
 		#TODO show error message to user 
 		return redirect(url_for('home'))
 
+"""
+Method to parse CSV data.
+Arg: Array of lines of text 
+Returns: Organized & sortable table of data
+This is where duplicate lines are ignored.
+"""
 def parse_csv(file):
 	repeats = set()
 	lines = []
@@ -56,14 +71,46 @@ def parse_csv(file):
 	return lines # do not include header row
 
 
-#python string template, handles text and edit links
+"""
+String templates and utility methods for filling in HTML pages
+"""
+
+#one line of table
 entry_template = "<tr> <th>{}</th> <th>{}</th> <th>{}</th> <th>{}</th> </tr>"
 
+#link on edit page - user clicks to choose which item to edit
+def edit_link(row,col,text):
+	return text + "<a href='/edit?row={}&col={}'>(edit)</a>".format(row,col)
+
+#submission input form for editing an item
+def edit_item(row,col):
+	res =  "<form method='post' action='/edit?row={}&col={}'>".format(row,col)
+	res += "<input type='text' name='new_entry'/>"
+	res += "<button type='submit'>Submit!</button>"
+	res += "</form>"
+	return res
+
+#html block shown at top of every page with options
+#could be channged to a static string but may need formatting at some point
+def options():
+	return """
+<form method='post' action='/new_csv' enctype=multipart/form-data>
+	<input type='file' id='csv' name='filename'/>
+	<button type='submit'>Upload!</button>
+	<p>
+		<a href='/edit'>Edit</a>
+		<a href='/'>Home</a>
+	</p>
+</form>
+"""
+
+#generate top row - category names and links to sort by category
 def headers(names):
 	link_template =  "<strong><a href='/?sort_by={n}'>{n}</a></strong>"
 	links = [link_template.format(n=name) for name in names]
 	return entry_template.format(*links)
 
+#generate rest of 'standard' table for home page 
 def std_table(data):
 	res = "<table style='width:100%'>"
 	res += headers(data[0])
@@ -72,7 +119,7 @@ def std_table(data):
 	res += "</table>"
 	return res
 
-
+#generate table with links to edit each item
 def edit_link_table(data):
 	res = "<table style='width:100%'>"
 	for (i,entry) in enumerate(data):
@@ -85,6 +132,7 @@ def edit_link_table(data):
 	res += "</table>"
 	return res
 
+#geneerate table with one editable field for the item the user has selected
 def edit_item_table(data,row,col):
 	res = "<table style='width:100%'>"
 	for (i,entry) in enumerate(data):
@@ -97,38 +145,17 @@ def edit_item_table(data,row,col):
 	res += "</table>"
 	return res
 
-def edit_link(row,col,text):
-	return text + "<a href='/edit?row={}&col={}'>(edit)</a>".format(row,col)
+#returns a table sorted by the specified category
+def sort(table, sort_by):
 
-def edit_item(row,col):
-	res =  "<form method='post' action='/edit?row={}&col={}'>".format(row,col)
-	res += "<input type='text' name='new_entry'/>"
-	res += "<button type='submit'>Submit!</button>"
-	res += "</form>"
-	return res
-
-def options():
-	#enctype attribute is necessary for flask to see filename in request.files
-	res =  "<form method='post' action='/new_csv' enctype=multipart/form-data>" 
-	res += "<input type='file' id='csv' name='filename'/>"
-	res += "<button type='submit'>Upload!</button>"
-	res += "<p><a href='/edit'>Edit</a>  <a href='/'>Home</a></p>"
-	res += "</form>"
-	return res
-
-def default_sort(table):
-	data = [app.data[0]] + sorted(app.data[1:], key=lambda line: line[2])
-	app.data = data
-	return table(data)
-
-def custom_sort(table, sort_by):
+	#determine index of category
 	category_index = None  
 	for (i,header_name) in enumerate(app.data[0]):
 		if header_name == sort_by:
 			category_index = i	
 
 	if category_index==None:
-		category_index = 0
+		category_index = 0 #we default to 0
 
 	data = [app.data[0]] + sorted(app.data[1:], key=lambda line: line[category_index])
 	app.data = data
