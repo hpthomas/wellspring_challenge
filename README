@@ -18,11 +18,11 @@ In addition to the basic requirements, this app also allows for alphabetical sor
 To sort by category, the user can simply click on the category name.
 
 Partial CRUD functionality was implemented as well - the user may edit any entry in the table, but creation and deletion of rows has not been implemented.
-To edit an entry, the user clicks 'edit' from the home page, and then clicks on the entry they wish to change. They are presented with a text input field which, when submitted, modifies that category on the server. 
-
+To edit an entry, the user clicks 'edit' from the home page, and then clicks on the entry they wish to change. They are presented with a text input field which, when submitted, modifies that category on the server.
 
 One a CSV file has been parsed, the data is stored in the Flask application's working memory. This means that the code is not sutable for deployment in a production environment where multiple server processes are running simultaneously, but it allows for straightforward deployment which does not depend on access to a local file system. 
 
+The app uses Python strings and a small collection of utility methods to fill in HTML responses. While storing HTML strings in a program source file is not a perfect solution, it simplifies the application and keeps in in a single server.py file. A full template engine like Jinja would be preferable in a more complex Python web application.
 
 ASSUMPTIONS 
 -Values and category names are case-sensitive - two lines in the table that differ only by capitalization will still be considered unique entries
